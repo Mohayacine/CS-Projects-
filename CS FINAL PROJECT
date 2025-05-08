@@ -1,0 +1,192 @@
+import sqlite3   # import sqlite3 to work with SQLite databases
+
+def create_connection(db_file):
+    """
+    Create a connection to the SQLite database file.
+    If the file doesn't exist, it will be created.
+    """
+    conn = sqlite3.connect(db_file)  # open or create database file
+    return conn                       # return connection object
+
+def create_table(conn):
+    """
+    Create the products table if it doesn't already exist.
+    Columns: id, name, category, price, stock
+    """
+    sql = """
+    CREATE TABLE IF NOT EXISTS products (
+        id INTEGER PRIMARY KEY,       -- unique product ID
+        name TEXT NOT NULL,           -- product name
+        category TEXT NOT NULL,       -- product category
+        price REAL NOT NULL,          -- product price
+        stock INTEGER NOT NULL        -- stock quantity
+    );
+    """
+    conn.execute(sql)  # run the SQL to create table
+    conn.commit()      # save changes
+
+def add_product(conn):
+    """
+    Prompt user for product details and insert into database.
+    Validates numeric inputs and checks for duplicate IDs.
+    """
+    try:
+        prod_id = int(input("Enter new Product ID (integer): "))
+        # check if ID already exists
+        cur = conn.execute("SELECT 1 FROM products WHERE id = ?", (prod_id,))
+        if cur.fetchone():
+            print("That Product ID already exists!\n")
+            return
+    except ValueError:
+        print("Invalid ID. Must be an integer.\n")
+        return
+
+    name = input("Enter product name: ").strip()      # get product name
+    category = input("Enter product category: ").strip()  # get category
+
+    try:
+        price = float(input("Enter product price (e.g. 9.99): "))
+        if price < 0:
+            raise ValueError
+    except ValueError:
+        print("Invalid price. Must be a non-negative number.\n")
+        return
+
+    try:
+        stock = int(input("Enter starting stock quantity: "))
+        if stock < 0:
+            raise ValueError
+    except ValueError:
+        print("Invalid stock. Must be a non-negative integer.\n")
+        return
+
+    # insert the new product into table
+    conn.execute(
+        "INSERT INTO products (id, name, category, price, stock) VALUES (?, ?, ?, ?, ?)",
+        (prod_id, name, category, price, stock)
+    )
+    conn.commit()  # save to database
+    print(f"Product '{name}' added successfully!\n")
+
+def search_inventory(conn):
+    """
+    Let the user search products by ID, name, or category.
+    Displays all matching products.
+    """
+    print("Search by:\n 1) ID\n 2) Name\n 3) Category")
+    choice = input("Choose option (1-3): ").strip()
+
+    if choice == '1':
+        try:
+            prod_id = int(input("Enter Product ID to search: "))
+        except ValueError:
+            print("Invalid ID. Must be an integer.\n")
+            return
+        sql = "SELECT * FROM products WHERE id = ?"
+        params = (prod_id,)
+    elif choice == '2':
+        name = input("Enter part or full product name: ").strip()
+        sql = "SELECT * FROM products WHERE name LIKE ?"
+        params = (f"%{name}%",)
+    elif choice == '3':
+        category = input("Enter category to search: ").strip()
+        sql = "SELECT * FROM products WHERE category LIKE ?"
+        params = (f"%{category}%",)
+    else:
+        print("Invalid option.\n")
+        return
+
+    cur = conn.execute(sql, params)  # run the query
+    rows = cur.fetchall()            # get all results
+
+    if rows:
+        print("\nFound products:")
+        for row in rows:
+            # unpack row into variables for clarity
+            pid, nm, cat, pr, st = row
+            print(f"ID:{pid} | Name:{nm} | Category:{cat} | Price:${pr:.2f} | Stock:{st}")
+        print()
+    else:
+        print("No matching products found.\n")
+
+def update_stock(conn):
+    """
+    Update stock quantity for an existing product.
+    User can add stock or subtract stock for sales.
+    """
+    try:
+        prod_id = int(input("Enter Product ID to update: "))
+    except ValueError:
+        print("Invalid ID. Must be an integer.\n")
+        return
+
+    # fetch current stock for the product
+    cur = conn.execute("SELECT stock, name FROM products WHERE id = ?", (prod_id,))
+    result = cur.fetchone()
+    if not result:
+        print("Product not found.\n")
+        return
+
+    current_stock, name = result
+    print(f"Current stock for '{name}' (ID {prod_id}): {current_stock}")
+
+    print("1) Add stock\n2) Subtract stock for sale")
+    choice = input("Choose option (1-2): ").strip()
+
+    try:
+        change = int(input("Enter quantity: "))
+        if change < 0:
+            raise ValueError
+    except ValueError:
+        print("Invalid quantity. Must be a non-negative integer.\n")
+        return
+
+    if choice == '1':
+        new_stock = current_stock + change  # add new stock
+    elif choice == '2':
+        if change > current_stock:
+            print("Cannot subtract more than current stock.\n")
+            return
+        new_stock = current_stock - change  # subtract sold units
+    else:
+        print("Invalid option.\n")
+        return
+
+    # update the database with new stock value
+    conn.execute("UPDATE products SET stock = ? WHERE id = ?", (new_stock, prod_id))
+    conn.commit()
+    print(f"Stock updated. New stock for '{name}': {new_stock}\n")
+
+def main():
+    """
+    Main loop showing menu and handling user choices.
+    Connects to 'inventory.db' and ensures table exists.
+    """
+    conn = create_connection("inventory.db")  # open (or create) database
+    create_table(conn)                        # make sure table is ready
+
+    while True:
+        # display menu options
+        print("Inventory Management System")
+        print("1) Add New Product")
+        print("2) Search Inventory")
+        print("3) Update Stock Level")
+        print("4) Exit")
+        choice = input("Select an option (1-4): ").strip()
+
+        if choice == '1':
+            add_product(conn)    # add a new product record
+        elif choice == '2':
+            search_inventory(conn)  # search for products
+        elif choice == '3':
+            update_stock(conn)   # change stock levels
+        elif choice == '4':
+            print("Exiting system. Goodbye!")
+            break                # leave main loop
+        else:
+            print("Invalid selection. Please choose 1-4.\n")
+
+    conn.close()  # close the database connection when done
+
+if __name__ == "__main__":
+    main()  # start the program
