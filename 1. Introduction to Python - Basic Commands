@@ -1,0 +1,35 @@
+```python
+# 1. Introduction to Python - Basic Commands (4/03)
+# -----------------------------------------------
+# We'll show how to: print messages, assign variables, perform math,
+# and get input from the user. Each line has a comment explaining its purpose.
+
+# Print a welcome message so the user knows the program started
+print("Welcome to Python Basics!")  # using print() to display text on screen
+
+# Create variables to store different types of data
+# 'a' holds an integer because we may use whole numbers in calculations
+a = 5  # integer variable
+description = "Number of items"  # string variable that describes data
+
+# 'b' holds a decimal value to show floats can store fractional numbers
+b = 3.2  # float variable
+
+# We can combine variables and operators for calculations
+# Here we add 'a' and 'b' so we can demonstrate addition
+sum_result = a + b  # add integer and float, result is float
+print("Sum of a and b is:", sum_result)  # show addition result
+
+# Subtraction example: useful to show difference between two values
+difference = a - b  # subtract float from integer
+print("Difference of a and b is:", difference)  # show subtraction result
+
+# Multiplication example: multiplies two numbers for scaling
+product = a * b  # multiply integer and float
+print("Product of a and b is:", product)  # show multiplication result
+
+# Division example: divides one number by another for ratios
+quotient = a / b  # divide a by b, result is float
+print("Quotient of a / b is:", quotient)  # show division result
+
+
