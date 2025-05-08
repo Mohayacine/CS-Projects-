@@ -1,0 +1,43 @@
+
+# 3. Movie Library System (10/03)
+# --------------------------------
+# Store and manage a list of movies: add, remove, search, list.
+
+class MovieLibrary:
+    def __init__(self):
+        self.movies = []  # empty list to hold titles
+
+    def add_movie(self, title):
+        if title not in self.movies:  # check duplicate
+            self.movies.append(title)  # add new movie
+            print(f"Added '{title}'.")
+        else:
+            print(f"'{title}' is already here.")  # already exists
+
+    def remove_movie(self, title):
+        if title in self.movies:  # only remove if present
+            self.movies.remove(title)
+            print(f"Removed '{title}'.")
+        else:
+            print(f"'{title}' not found.")
+
+    def search_movie(self, title):
+        if title in self.movies:  # search by membership
+            print(f"Found '{title}'.")
+        else:
+            print(f"'{title}' not in library.")
+
+    def list_movies(self):
+        if not self.movies:  # no movies case
+            print("No movies yet.")
+        else:
+            print("Movies:")
+            for i, m in enumerate(self.movies, 1):  # numbered list
+                print(f"{i}. {m}")
+
+# Example usage:
+# lib = MovieLibrary()
+# lib.add_movie("Inception")
+# lib.list_movies()
+
+
