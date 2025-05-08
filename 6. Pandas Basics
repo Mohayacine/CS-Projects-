@@ -1,0 +1,16 @@
+
+
+
+# 6. Pandas Basics (26/03)
+# -----------------------
+# Create and explore a small table of data.
+import pandas as pd  # import data library
+
+data = {'Name': ['Alice','Bob','Charlie'], 'Age': [25,30,35]}  # raw data
+
+df = pd.DataFrame(data)  # make table\ nprint("Table:\n", df)  # show it
+
+# Calculate average age
+avg_age = df['Age'].mean()  # built-in mean()
+print(f"Average age: {avg_age:.1f}")  # show one decimal
+```
