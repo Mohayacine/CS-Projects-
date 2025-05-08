@@ -1,0 +1,35 @@
+
+# 4. Personal Budget Tracker - Functions (12/03)
+# ---------------------------------------------
+# Track incomes and expenses, then show a summary.
+
+budget = {'balance': 0.0, 'history': []}  # track data
+
+def add_income(amount, source):
+    budget['balance'] += amount  # add amount to balance
+    budget['history'].append(f"+${amount} from {source}")  # record entry
+    print(f"Income: +${amount} ({source})")  # announce
+
+
+def add_expense(amount, category):
+    if amount <= budget['balance']:  # only if enough
+        budget['balance'] -= amount  # subtract from balance
+        budget['history'].append(f"-${amount} for {category}")  # record
+        print(f"Expense: -${amount} ({category})")  # announce
+    else:
+        print("Not enough balance.")  # insufficient funds
+
+
+def show_summary():
+    print(f"\nBalance: ${budget['balance']}")  # show balance
+    print("History:")
+    for entry in budget['history']:  # list each record
+        print(entry)
+    print()
+
+# Example flow:
+# add_income(1000, 'Job')
+# add_expense(200, 'Food')
+# show_summary()
+
+
