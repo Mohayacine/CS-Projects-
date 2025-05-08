@@ -1,0 +1,44 @@
+
+
+
+# 5. Restaurant Ordering System (Class Project)
+# -------------------------------------------
+# Two classes: one for menu items, one for orders.
+
+class MenuItem:
+    def __init__(self, name, price):
+        self.name = name  # store dish name
+        self.price = price  # store dish price
+
+    def __str__(self):  # how to show item
+        return f"{self.name}: ${self.price:.2f}"
+
+class Order:
+    def __init__(self):
+        self.items = []  # list of (MenuItem, qty)
+
+    def add_item(self, item, qty=1):
+        self.items.append((item, qty))  # add tuple
+        print(f"Added {qty}× {item.name}.")  # announce
+
+    def total(self):
+        return sum(item.price * qty for item, qty in self.items)  # sum costs
+
+    def receipt(self):
+        print("--- Receipt ---")
+        for item, qty in self.items:  # list each line
+            print(f"{qty}× {item.name} = ${item.price*qty:.2f}")
+        print(f"Total = ${self.total():.2f}")
+        print("----------------")
+
+# Example:
+# burger = MenuItem('Burger', 8.50)
+# soda = MenuItem('Soda', 1.50)
+# order = Order()
+# order.add_item(burger, 2)
+# order.add_item(soda, 3)
+# order.receipt()
+
+
+
+```
