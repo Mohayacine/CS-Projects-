@@ -1,0 +1,187 @@
+# Inventory Management System Report
+
+## 1. Problem Definition and Analysis
+
+In today's busy business and retail world, keeping track of product inventory accurately is very important to ensure customers get what they want and the store runs smoothly. This project solves the need for a simple, reliable, and easy-to-use Inventory Management System (IMS) that small shops can use without much training.
+
+I chose this final project because I have worked with Python and SQLite databases in my course, making these tools a natural fit. They let me build a system that does essential stock-tracking without being too complicated.
+
+The main goals are:
+
+1. Make a simple menu that anyone can use to add, find, and update products.
+2. Keep clear records of product details (ID, name, category, price, stock amount).
+3. Catch mistakes early so bad data can't get into the system.
+4. Let users quickly look up items and change stock to avoid running out or having too much.
+
+I learned about Python–SQLite from online tutorials and looked at basic database designs for tracking inventory. I also spoke with a small shop owner to confirm the need for a tool that runs in a terminal window—no fancy screens needed. The steps are clear: set up the database, add products, and then search or update stock, one after the other.
+
+## 2. Documented Design 
+
+### 2.1 Overall System Design
+
+The IMS follows a top-down modular architecture:
+
+```
+Main Program Loop
+├── Database Setup Module
+│   └── Connection & Table Creation
+├── Product Addition Module
+├── Search Module
+└── Stock Update Module
+```
+
+Each arrow indicates a sequential dependency: the database setup must complete before any other operation.
+
+### 2.2 Main Modules Description
+
+1. **Database Setup Module**: Establishes an SQLite connection (`inventory.db`) and creates the `products` table with columns: `id` (INTEGER PRIMARY KEY), `name` (TEXT), `category` (TEXT), `price` (REAL), `stock` (INTEGER). Uses `CREATE TABLE IF NOT EXISTS` for idempotency.
+
+2. **Product Addition Module**: Prompts for and validates each field:
+
+   * **ID**: cast to `int`; checks uniqueness with `SELECT 1 FROM products WHERE id = ?`.
+   * **Name/Category**: trimmed `str` inputs.
+   * **Price**: cast to `float`; ensures `≥ 0`.
+   * **Stock**: cast to `int`; ensures `≥ 0`. On success, executes `INSERT INTO products` with parameter binding to avoid SQL injection.
+
+3. **Search Module**: Offers three search modes:
+
+   * **By ID**: exact match query.
+   * **By name**: `LIKE '%?%'` partial match.
+   * **By category**: `LIKE '%?%'` partial match. Fetches and displays matching rows.
+
+4. **Stock Update Module**: Retrieves current stock via `SELECT stock, name`, displays to user, then lets them choose to add or subtract units. Validates non-negative adjustments and that subtraction does not exceed available stock. Executes `UPDATE products SET stock = ?` to persist changes.
+
+### 2.3 Data Items and Structures
+
+* **Database Table \*\*\*\***\`\`:
+
+  * `id`: INTEGER (primary key)
+  * `name`: TEXT
+  * `category`: TEXT
+  * `price`: REAL
+  * `stock`: INTEGER
+
+* **In-Memory Parameters**:
+
+  * Python primitives (`ints`, `floats`, `str`).
+  * SQLite3 cursor for fetching rows as tuples `(id, name, category, price, stock)`.
+
+### 2.4 Algorithms and Pseudo-code
+
+**Main Loop**:
+
+```
+WHILE True:
+  DISPLAY menu
+  GET choice
+  IF choice == 1: call add_product()
+  ELIF choice == 2: call search_inventory()
+  ELIF choice == 3: call update_stock()
+  ELIF choice == 4: BREAK
+  ELSE: print invalid
+```
+
+**add\_product()**:
+
+```
+TRY parse ID as int
+IF ID exists in DB: return error
+READ name, category
+TRY parse price as float; ensure >=0
+TRY parse stock as int; ensure >=0
+INSERT row into DB
+COMMIT
+```
+
+### 2.5 Input/Output Mockups
+
+* **Add New Product Form**:
+
+```
+Enter new Product ID (integer): _
+Enter product name: _
+Enter product category: _
+Enter product price (e.g. 9.99): _
+Enter starting stock quantity: _
+```
+
+* **Search Result Example**:
+
+```
+Found products:
+ID: 101 | Name: Widget | Category: Tools | Price: $12.50 | Stock: 25
+```
+
+* **Update Stock Prompts**:
+
+```
+Enter Product ID to update: 101
+Current stock for 'Widget' (ID 101): 25
+1) Add stock
+2) Subtract stock for sale
+Choose option (1-2): 2
+Enter quantity: 5
+Stock updated. New stock for 'Widget': 20
+```
+
+### 2.6 Libraries and Frameworks
+
+* **SQLite3**: built-in Python library, chosen for zero-configuration database storage.
+* **Python Standard Library**: `sqlite3`, `sys` for I/O.
+
+No external GUI or web frameworks are used, keeping the solution lightweight and portable.
+
+### 2.7 Error Handling
+
+Invalid inputs are caught by `try/except ValueError` blocks around `int()` and `float()` casts. SQL parameter binding (`?`) ensures safety against injection and syntax errors.
+
+### 2.8 Troubleshooting
+
+* **Error**: `sqlite3.OperationalError: no such table: products`
+
+  * **Cause**: table creation not invoked before queries.
+  * **Resolution**: ensure `create_table(conn)` is called at startup.
+
+* **Error**: `ValueError: invalid literal for int()`
+
+  * **Cause**: non-numeric input when integer expected.
+  * **Resolution**: added `try/except` around input parsing and user-friendly messages.
+
+## 3. Testing and Evaluation 
+
+Comprehensive testing covered each module:
+
+1. **Add Product Tests**:
+
+   * Valid inputs (e.g., ID=200, price=15.99, stock=10) → new row appears in DB.
+   * Duplicate ID → appropriate error printed, no duplicate inserted.
+   * Negative price or stock → error caught, insertion aborted.
+
+2. **Search Tests**:
+
+   * Exact ID lookup → correct single result.
+   * Partial name/category searches → multiple matches returned.
+   * Nonexistent queries → “No matching products” message.
+
+3. **Stock Update Tests**:
+
+   * Add stock beyond 0 → stock increments correctly.
+   * Subtract stock within limit → decrements correctly.
+   * Subtraction exceeding current stock → error caught, no change.
+
+Representative console screenshots were captured showing successful and failed operations (e.g., invalid ID input, duplicate insertion attempts). Each test confirmed that the program’s output matched expected behavior and that the database reflected intended changes.
+
+**Objective Review:**
+
+1. **Intuitive Interface:** Achieved via clear menu prompts and input validation. Easy for non-technical users to follow.
+2. **Accurate Record-Keeping:** Database transactions preserved integrity; no corrupt entries after invalid inputs.
+3. **Error Handling:** All numeric inputs wrapped in `try/except`; prevented crashes and guided user to correct values.
+4. **Quick Lookups & Adjustments:** Search and update operations executed in <1 second for small datasets, meeting performance needs.
+
+**Improvements Suggested:**
+
+* Add CSV import/export for bulk data transfer.
+* Integrate a simple web interface using Flask for remote access.
+* Implement user authentication and role-based permissions.
+
+Continuous feedback from peers validated usability. Overall, the IMS meets its objectives effectively and forms a solid foundation for further enhancements.
